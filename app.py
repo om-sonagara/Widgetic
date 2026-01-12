@@ -1,0 +1,366 @@
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, make_response
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from config import Config
+from models import db, User, Website, WebsiteMember, Widget, WidgetType, WidgetPosition, WidgetStatus
+import uuid
+import json
+from flask_migrate import Migrate
+from flask_cors import CORS
+
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+db.init_app(app)
+migrate = Migrate(app, db)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
+
+# Removed deprecated before_first_request
+
+# Authentication Routes
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        name = request.form.get('name')
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered')
+            return redirect(url_for('register'))
+            
+        user = User(email=email, name=name, password_hash=generate_password_hash(password))
+        db.session.add(user)
+        db.session.commit()
+        
+        
+        login_user(user)
+        return redirect(url_for('dashboard'))
+        
+    return render_template('auth/register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid email or password')
+            
+    return render_template('auth/login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# Dashboard & Website Routes
+
+@app.route('/')
+def index():
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # List all websites the user is a member of
+    memberships = WebsiteMember.query.filter_by(user_id=current_user.id).all()
+    website_ids = [m.website_id for m in memberships]
+    websites = Website.query.filter(Website.id.in_(website_ids)).all()
+    
+    return render_template('dashboard/websites.html', websites=websites)
+
+@app.route('/website/new', methods=['GET', 'POST'])
+@login_required
+def create_website():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        domain = request.form.get('domain')
+        
+        website = Website(name=name, domain=domain)
+        db.session.add(website)
+        db.session.commit()
+        
+        member = WebsiteMember(user_id=current_user.id, website_id=website.id, role="ADMIN")
+        db.session.add(member)
+        db.session.commit()
+        
+        return redirect(url_for('dashboard'))
+        
+    return render_template('dashboard/create_website.html')
+
+@app.route('/website/<website_id>')
+@login_required
+def website_detail(website_id):
+    website = Website.query.get_or_404(website_id)
+    # Check membership
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+        
+    search_query = request.args.get('search', '')
+    filter_type = request.args.get('type', '')
+    filter_status = request.args.get('status', '')
+
+    query = Widget.query.filter_by(website_id=website.id)
+
+    if search_query:
+        query = query.filter(Widget.name.contains(search_query))
+    
+    if filter_type:
+        query = query.filter(Widget.type == WidgetType(filter_type))
+    
+    if filter_status:
+        query = query.filter(Widget.status == WidgetStatus(filter_status))
+
+    widgets = query.order_by(Widget.created_at.desc()).all()
+    
+    # Calculate stats
+    total_views = sum(w.views for w in website.widgets)
+    total_clicks = sum(w.clicks for w in website.widgets)
+    ctr = (total_clicks / total_views * 100) if total_views > 0 else 0
+    
+    return render_template('dashboard/index.html', 
+                           website=website, 
+                           widgets=widgets, 
+                           total_views=total_views,
+                           total_clicks=total_clicks,
+                           ctr=ctr,
+                           WidgetType=WidgetType, 
+                           WidgetStatus=WidgetStatus,
+                           search_query=search_query,
+                           filter_type=filter_type,
+                           filter_status=filter_status)
+
+@app.route('/website/<website_id>/settings', methods=['POST'])
+@login_required
+def website_settings(website_id):
+    website = Website.query.get_or_404(website_id)
+    # Check membership
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+
+    # Update Settings
+    hide_time = int(request.form.get('hide_time', 8))
+    show_time = int(request.form.get('show_time', 5))
+    
+    position = request.form.get('position', 'BOTTOM_RIGHT')
+    bg_color = request.form.get('background_color', '#000000')
+    text_color = request.form.get('text_color', '#ffffff')
+    
+    show_close_button = request.form.get('show_close_button') == 'on'
+    show_branding = request.form.get('show_branding') == 'on'
+    
+    website.settings = {
+        "timing": {
+            "showTime": show_time,
+            "hideTime": hide_time
+        },
+        "position": position,
+        "style": {
+            "backgroundColor": bg_color,
+            "textColor": text_color
+        },
+        "behavior": {
+            "showCloseButton": show_close_button,
+            "showBranding": show_branding
+        }
+    }
+    db.session.commit()
+    flash("Settings updated")
+    return redirect(url_for('website_detail', website_id=website.id, tab='settings'))
+
+# Widget Routes
+
+@app.route('/website/<website_id>/widget/new', methods=['GET', 'POST'])
+@login_required
+def create_widget(website_id):
+    website = Website.query.get_or_404(website_id)
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        
+        widget_type = request.form.get('type')
+        
+        content = {
+            "title": request.form.get('title'),
+            "description": request.form.get('description'),
+            "button_text": request.form.get('button_text'),
+            "button_url": request.form.get('button_url'),
+            "open_behavior": request.form.get('open_behavior', 'AUTO'),
+            "loop_count": int(request.form.get('loop_count', 0))
+        }
+        
+        print(f"DEBUG CREATE: Received type '{widget_type}'")
+        
+        widget = Widget(
+            name=name,
+            website_id=website.id,
+            created_by_id=current_user.id,
+            content=content,
+            status=WidgetStatus.ACTIVE,
+            type=WidgetType(widget_type) if widget_type else WidgetType.NOTIFICATION,
+            position=WidgetPosition.BOTTOM_RIGHT # Default, handled by website settings
+        )
+        
+        db.session.add(widget)
+        db.session.commit()
+        return redirect(url_for('website_detail', website_id=website.id))
+        
+    return render_template('dashboard/create_widget.html', website=website)
+
+@app.route('/widget/<widget_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_widget(widget_id):
+    widget = Widget.query.get_or_404(widget_id)
+    if widget.created_by_id != current_user.id:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        widget.name = request.form.get('name')
+        
+        content = widget.content.copy() # Shallow copy
+        content['title'] = request.form.get('title')
+        content['description'] = request.form.get('description')
+        content['button_text'] = request.form.get('button_text')
+        content['button_url'] = request.form.get('button_url')
+        
+        # Custom Fields & Settings
+        try:
+            content['loop_count'] = int(request.form.get('loop_count', 0)) # 0 means infinite
+        except (ValueError, TypeError):
+            content['loop_count'] = 0
+            
+        content['open_behavior'] = request.form.get('open_behavior', content.get('open_behavior', 'AUTO'))
+            
+        widget.content = content
+        
+        # update fields
+        # update fields
+        widget_type = request.form.get('type')
+        print(f"DEBUG EDIT: Received type '{widget_type}'")
+        if widget_type:
+            try:
+                widget.type = WidgetType(widget_type)
+            except ValueError:
+                print(f"DEBUG EDIT: Invalid type '{widget_type}'")
+                pass # Keep existing type if invalid
+
+        db.session.commit()
+        flash("Widget updated")
+        return redirect(url_for('edit_widget', widget_id=widget.id, tab='settings'))
+
+    return render_template('dashboard/edit_widget.html', widget=widget, WidgetType=WidgetType, WidgetPosition=WidgetPosition)
+
+@app.route('/widget/<widget_id>/delete', methods=['POST'])
+@login_required
+def delete_widget(widget_id):
+    widget = Widget.query.get_or_404(widget_id)
+    website_id = widget.website_id
+    if widget.created_by_id != current_user.id:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+        
+    db.session.delete(widget)
+    db.session.commit()
+    flash("Widget deleted")
+    return redirect(url_for('website_detail', website_id=website_id))
+
+@app.route('/widget/<widget_id>/toggle_status', methods=['POST'])
+@login_required
+def toggle_widget_status(widget_id):
+    widget = Widget.query.get_or_404(widget_id)
+    if widget.created_by_id != current_user.id:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+    
+    if widget.status == WidgetStatus.ACTIVE:
+        widget.status = WidgetStatus.PAUSED
+    else:
+        widget.status = WidgetStatus.ACTIVE
+        
+    db.session.commit()
+    flash(f"Widget {widget.name} is now {widget.status.value}")
+    return redirect(url_for('website_detail', website_id=widget.website_id, tab='toasts'))
+
+
+# API & Widget Routes
+
+@app.route('/api/website/<public_key>/config')
+def get_website_config(public_key):
+    website = Website.query.filter_by(public_key=public_key).first()
+    if not website:
+        return jsonify({"error": "Website not found"}), 404
+    
+    # Global Settings
+    settings = {
+        "timing": website.settings.get('timing', {"showTime": 5, "hideTime": 8}),
+        "position": website.settings.get('position', 'BOTTOM_RIGHT'),
+        "style": website.settings.get('style', {"backgroundColor": "#000000", "textColor": "#ffffff"}),
+        "behavior": website.settings.get('behavior', {"showCloseButton": False, "showBranding": False})
+    }
+
+    # Active Widgets
+    active_widgets = []
+    for widget in website.widgets:
+        if widget.status == WidgetStatus.ACTIVE:
+            active_widgets.append({
+                "id": widget.id,
+                "type": widget.type.name,
+                "content": widget.content,
+                "views": widget.views,
+                "clicks": widget.clicks
+            })
+
+    return jsonify({
+        "settings": settings,
+        "widgets": active_widgets
+    })
+
+# Analytics Tracking Endpoint
+@app.route('/api/widget/<widget_id>/track', methods=['POST'])
+def track_widget_event(widget_id):
+    data = request.json
+    event_type = data.get('type') # 'view' or 'click'
+    
+    widget = Widget.query.get(widget_id)
+    if not widget:
+        return jsonify({"error": "Widget not found"}), 404
+        
+    if event_type == 'view':
+        widget.views += 1
+    elif event_type == 'click':
+        widget.clicks += 1
+        
+    db.session.commit()
+    return jsonify({"success": True})
+
+if __name__ == '__main__':
+    app.run(debug=True)

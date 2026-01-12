@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-4">
+        <div class="flex items-center gap-2 text-sm text-slate-500 mb-2 font-bold uppercase tracking-widest px-1">
+            <a href="{{ url_for('dashboard') }}" class="hover:text-blue-600 transition-colors">Websites</a>
+            <span>/</span>
+            <span>Dashboard</span>
+        </div>
+        <h1 class="text-5xl font-black text-slate-800 tracking-tighter">{{ website.name }}</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
+        <div class="border-b border-gray-200 flex px-8 pt-4 gap-4">
+            <button onclick="switchTab('installation')" id="tab-installation" class="tab-btn px-6 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-all hover:text-blue-700">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Installation
+                </span>
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Analytics
+                </span>
+            </button>
+            <button onclick="switchTab('toasts')" id="tab-toasts" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                 <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                    Toasts
+                </span>
+            </button>
+             <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </span>
+            </button>
+        </div>
+
+        <div class="p-8 flex-1">
+            <!-- Installation Tab -->
+            <div id="content-installation" class="tab-content px-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Deploy Widget</h2>
+                <p class="text-slate-500 mb-8 max-w-2xl font-medium">Embed this lightweight script just before your closing <code>&lt;/body&gt;</code> tag.</p>
+                
+                <div class="bg-slate-800 rounded-2xl p-6 border border-gray-700 group relative max-w-4xl shadow-inner">
+                <pre class="text-blue-100 font-mono text-sm break-all whitespace-pre-wrap leading-relaxed">&lt;script src="http://127.0.0.1:5000/static/widget.js?key={{ website.public_key }}" async defer&gt;&lt;/script&gt;</pre>
+                <button onclick="copyToClipboard('{{ website.public_key }}')" class="absolute top-4 right-4 bg-blue-600 hover:bg-blue-500 text-white text-xs px-6 py-2.5 rounded-xl transition-all font-bold shadow-lg shadow-blue-900/30">
+                    Copy Snippet
+                </button>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+             <div id="content-analytics" class="tab-content hidden px-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-8">Performance Insights</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Impressions</p>
+                        <p class="text-4xl font-black text-blue-600">{{ widgets|sum(attribute='views') }}</p>
+                    </div>
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Clicks</p>
+                        <p class="text-4xl font-black text-blue-600">{{ widgets|sum(attribute='clicks') }}</p>
+                    </div>
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Conversion Rate</p>
+                        <p class="text-4xl font-black text-blue-600">
+                            {% if total_views > 0 %}
+                                {{ "%.2f"|format(total_clicks / total_views * 100) }}%
+                            {% else %}
+                                0.00%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toasts (Widgets) Tab -->
+            <div id="content-toasts" class="tab-content hidden px-4">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Active Toasts</h2>
+                    <a href="{{ url_for('create_widget', website_id=website.id) }}" class="bg-blue-600 text-white px-6 py-3 rounded-2xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-500/30 flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Create Verification Toast
+                    </a>
+                </div>
+
+                <div class="border border-gray-200 rounded-3xl overflow-hidden bg-white shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100">
+                                <th class="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest">Toast Identity</th>
+                                <th class="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                <th class="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                                <th class="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest">Views</th>
+                                <th class="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for widget in widgets %}
+                             <tr class="hover:bg-blue-50/50 transition-colors duration-200">
+                                <td class="p-6">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-800 tracking-tight">{{ widget.name }}</span>
+                                        <span class="text-xs text-slate-500 font-medium">{{ widget.content.get('title', 'No Title') }}</span>
+                                    </div>
+                                </td>
+                                <td class="p-6 text-sm text-slate-500 font-bold uppercase tracking-tight">{{ widget.type.value|title }}</td>
+                                <td class="p-6">
+                                    <form method="POST" action="{{ url_for('toggle_widget_status', widget_id=widget.id) }}" class="inline">
+                                        <button type="submit" class="px-4 py-1.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all focus:outline-none {% if widget.status.value == 'ACTIVE' %}bg-blue-100 text-blue-600 border border-blue-200 hover:bg-blue-200{% else %}bg-gray-100 text-slate-500 border border-gray-200 hover:bg-gray-200{% endif %}">
+                                            {{ widget.status.value }}
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="p-6 text-sm text-slate-800 font-black">
+                                    {{ widget.views }}
+                                </td>
+                                <td class="p-6 text-right">
+                                     <div class="flex justify-end items-center gap-4">
+                                        <a href="{{ url_for('edit_widget', widget_id=widget.id) }}" class="text-blue-600 hover:text-blue-800 p-2 font-bold transition-colors">
+                                            Manage
+                                        </a>
+                                        <form method="POST" action="{{ url_for('delete_widget', widget_id=widget.id) }}" onsubmit="return confirm('Delete widget?');" class="inline">
+                                            <button type="submit" class="text-gray-400 hover:text-red-500 p-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </form>
+                                     </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-gray-500">
+                                    No widgets found. Create one to get started!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="content-settings" class="tab-content hidden max-w-4xl px-4">
+                 <form method="POST" action="{{ url_for('website_settings', website_id=website.id) }}">
+                    <div class="space-y-12">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-2xl mb-2 tracking-tight">Display Timing</h4>
+                            <p class="text-sm text-slate-500 mb-8 font-medium">Control the pacing and longevity of your verification toasts.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Time between toasts (sec)</label>
+                                    <input type="number" name="hide_time" value="{{ website.settings.get('timing', {}).get('hideTime', 8) }}" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Toast display time (sec)</label>
+                                    <input type="number" name="show_time" value="{{ website.settings.get('timing', {}).get('showTime', 5) }}" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-100">
+
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-2xl mb-2 tracking-tight">Style & Placement</h4>
+                            <p class="text-sm text-slate-500 mb-8 font-medium">Fine-tune exactly where and how your notifications appear.</p>
+                            
+                            <div class="space-y-8">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 px-1">Screen Position</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        {% for pos in ['TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_LEFT', 'BOTTOM_RIGHT'] %}
+                                        <label class="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all duration-300 {% if website.settings.get('position') == pos or (not website.settings.get('position') and pos == 'BOTTOM_RIGHT') %}border-blue-500 bg-blue-50 shadow-sm{% endif %}">
+                                            <input type="radio" name="position" value="{{ pos }}" class="text-blue-600 bg-white border-gray-300 focus:ring-blue-500" {% if website.settings.get('position') == pos or (not website.settings.get('position') and pos == 'BOTTOM_RIGHT') %}checked{% endif %}>
+                                            <span class="text-sm font-bold text-slate-700">{{ pos|replace('_', ' ')|title }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Background Core</label>
+                                        <input type="color" name="background_color" class="h-14 w-full p-1 bg-white border border-gray-200 rounded-2xl cursor-pointer" value="{{ website.settings.get('style', {}).get('backgroundColor', '#020617') }}">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Typography Root</label>
+                                        <input type="color" name="text_color" class="h-14 w-full p-1 bg-white border border-gray-200 rounded-2xl cursor-pointer" value="{{ website.settings.get('style', {}).get('textColor', '#ffffff') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+ 
+                         <hr class="border-gray-100">
+ 
+                        <div>
+                             <h4 class="font-bold text-slate-800 text-2xl mb-2 tracking-tight">Core Experience</h4>
+                             
+                             <div class="space-y-6 mt-8">
+                                <div class="flex items-center justify-between p-6 bg-white rounded-2xl border border-gray-200">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-800">Interactive Dismissal</label>
+                                        <p class="text-xs text-slate-500 font-medium">Allow visitors to manually close notifications.</p>
+                                    </div>
+                                    <input type="checkbox" name="show_close_button" class="w-6 h-6 text-blue-600 bg-white border-gray-300 rounded-lg focus:ring-blue-500" {% if website.settings.get('behavior', {}).get('showCloseButton') %}checked{% endif %}>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-6 bg-white rounded-2xl border border-gray-200">
+                                     <div>
+                                        <label class="block text-sm font-bold text-slate-800">Verified Branded Signature</label>
+                                        <p class="text-xs text-slate-500 font-medium font-bold uppercase tracking-widest mt-1">"Powered by Widgetic"</p>
+                                    </div>
+                                     <input type="checkbox" name="show_branding" class="w-6 h-6 text-blue-600 bg-white border-gray-300 rounded-lg focus:ring-blue-500" {% if website.settings.get('behavior', {}).get('showBranding') %}checked{% endif %}>
+                                </div>
+                             </div>
+                        </div>
+ 
+                        <div class="pt-8 flex justify-end">
+                             <button type="submit" class="bg-blue-600 text-white px-12 py-4 rounded-2xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 text-lg">Update Global Ecosystem</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all contents
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        // Show selected content
+        document.getElementById('content-' + tabName).classList.remove('hidden');
+        
+        // Reset all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            btn.classList.add('text-slate-500', 'hover:text-slate-800');
+        });
+        
+        // Highlight active button
+        const activeBtn = document.getElementById('tab-' + tabName);
+        activeBtn.classList.remove('text-slate-500', 'hover:text-slate-800');
+        activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+    }
+
+    function copyToClipboard(key) {
+        const text = `<script src="http://127.0.0.1:5000/static/widget.js?key=${key}" async defer><\/script>`;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard!");
+        });
+    }
+
+    // Default to correct tab or Installation
+    switchTab("{{ request.args.get('tab', 'installation') }}");
+</script>
+{% endblock %}

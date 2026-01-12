@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-10">
+        <h1 class="text-5xl font-bold text-slate-800 tracking-tighter">{{ widget.name }}</h1>
+        <a href="#" class="text-sm text-slate-500 hover:text-blue-600 font-bold block mt-2 truncate max-w-xl">
+             <span class="opacity-50 uppercase tracking-widest text-[10px] mr-2">Endpoint:</span>
+             http://127.0.0.1:5000/static/widget.js?key={{ widget.public_key }}
+        </a>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
+        <div class="border-b border-gray-200 flex px-8 pt-4 gap-4">
+            <button onclick="switchTab('installation')" id="tab-installation" class="tab-btn px-6 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-all hover:text-blue-700">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Installation
+                </span>
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Analytics
+                </span>
+            </button>
+            <button onclick="switchTab('content')" id="tab-content" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                 <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                    Content & Appearance
+                </span>
+            </button>
+             <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition-all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </span>
+            </button>
+        </div>
+
+        <div class="p-8 flex-1">
+            <!-- Installation Tab -->
+            <div id="content-installation" class="tab-content px-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2 tracking-tight tracking-tight">Deployment Snippet</h2>
+                <p class="text-slate-500 mb-8 max-w-2xl font-medium">Inject this high-performance core into your website's architecture.</p>
+                
+                <div class="bg-slate-800 rounded-2xl p-6 border border-gray-700 group relative max-w-4xl shadow-inner">
+                    <pre class="text-blue-100 font-mono text-sm break-all whitespace-pre-wrap leading-relaxed">&lt;script src="http://127.0.0.1:5000/static/widget.js?key={{ widget.website.public_key }}"&gt;&lt;/script&gt;</pre>
+                    <button onclick="copyToClipboard('{{ widget.website.public_key }}')" class="absolute top-4 right-4 bg-blue-600 hover:bg-blue-500 text-white text-xs px-6 py-2.5 rounded-xl transition-all font-bold shadow-lg shadow-blue-500/30">
+                        Copy Snippet
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+             <div id="content-analytics" class="tab-content hidden px-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-8">Performance Metrics</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Impressions</p>
+                        <p class="text-4xl font-black text-blue-600">{{ widget.views }}</p>
+                    </div>
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Interactions</p>
+                        <p class="text-4xl font-black text-blue-600">{{ widget.clicks }}</p>
+                    </div>
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Efficiency (CTR)</p>
+                        <p class="text-4xl font-black text-blue-600">
+                            {% if widget.views > 0 %}
+                                {{ "%.2f"|format(widget.clicks / widget.views * 100) }}%
+                            {% else %}
+                                0.00%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="h-80 bg-gray-50 rounded-3xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-slate-500 group overflow-hidden relative">
+                    <div class="w-20 h-20 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                    </div>
+                    <span class="font-bold uppercase tracking-widest text-xs">Analytics Visualization Loading...</span>
+                </div>
+            </div>
+
+            <!-- Content & Appearance Form -->
+            <form method="POST" id="editForm" class="h-full" novalidate>
+                <!-- Content Tab -->
+                <div id="content-content" class="tab-content hidden h-full px-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 h-full">
+                        <div class="h-full flex flex-col">
+                             <div class="mb-10">
+                                <h2 class="text-2xl font-bold text-slate-800 mb-2 tracking-tight">Core Content</h2>
+                                <p class="text-sm text-slate-500 font-medium">Fine-tune the messaging and calls-to-action for this toast.</p>
+                            </div>
+                            
+                            <div class="space-y-8">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Headline</label>
+                                    <input type="text" name="title" value="{{ widget.content.get('title', '') }}" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                </div>
+                                <div>
+                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Narrative</label>
+                                    <textarea name="description" rows="3" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">{{ widget.content.get('description', '') }}</textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Button Label</label>
+                                        <input type="text" name="button_text" value="{{ widget.content.get('button_text', 'Learn More') }}" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Target URL</label>
+                                        <input type="url" name="button_url" value="{{ widget.content.get('button_url', '') }}" placeholder="https://..." class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                    </div>
+                                </div>
+                            </div>
+ 
+                            <div class="mt-auto pt-12">
+                                <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-2xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 text-lg w-full">Synchronize Changes</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Side -->
+                        <div class="bg-gray-100 rounded-3xl p-12 flex flex-col items-center justify-center relative overflow-hidden border border-gray-200 shadow-inner group">
+                             
+                             <p class="absolute top-6 left-6 text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Live Preview</p>
+                             
+                             <!-- Real-looking mock notification -->
+                             <div class="relative bg-white border border-gray-200 p-6 rounded-2xl w-80 shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+                                 <div class="flex items-start gap-4 mb-4">
+                                     <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                                          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                     </div>
+                                     <div class="flex-1">
+                                         <h4 class="font-bold text-slate-800 text-sm mb-1">Preview Mode</h4>
+                                         <p class="text-[11px] text-slate-500 leading-relaxed">Your content will be rendered here with perfect precision across any interface.</p>
+                                     </div>
+                                 </div>
+                                 <div class="h-8 w-full bg-blue-600 rounded-lg flex items-center justify-center text-[10px] font-bold text-white px-4">
+                                     SYSTEM READY
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="content-settings" class="tab-content hidden max-w-2xl px-4">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-8 tracking-tight">Core Configuration</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Internal Protocol Name</label>
+                            <input type="text" name="name" value="{{ widget.name }}" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                            <p class="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-widest px-1">Private reference for your dashboard only.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">System Type</label>
+                                <div class="relative">
+                                    <select name="type" class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 pr-10 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none appearance-none cursor-pointer bg-none">
+                                        {% for type in WidgetType %}
+                                        <option value="{{ type.name }}" {% if widget.type == type %}selected{% endif %}>{{ type.value.replace('_', ' ')|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">Recurrence Loop</label>
+                                <input type="number" name="loop_count" value="{{ widget.content.get('loop_count', 0) }}" min="0" class="w-full bg-slate-50 border-gray-200 rounded-2xl p-4 text-slate-800 font-bold focus:border-blue-500 focus:ring-blue-500/20 transition-all outline-none">
+                                <p class="text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-widest px-1">0 = Infinite cycles</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-100">
+                            <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-2xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 text-lg">Save Global Parameters</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all contents
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        // Show selected content
+        document.getElementById('content-' + tabName).classList.remove('hidden');
+        
+        // Reset all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            btn.classList.add('text-slate-500', 'hover:text-slate-800');
+        });
+        
+        // Highlight active button
+        const activeBtn = document.getElementById('tab-' + tabName);
+        activeBtn.classList.remove('text-slate-500', 'hover:text-slate-800');
+        activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+    }
+
+    function copyToClipboard(key) {
+        const text = `<script src="http://127.0.0.1:5000/static/widget.js?key=${key}"><\/script>`;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard!");
+        });
+    }
+
+    // Initialize tab from URL
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const activeTab = params.get('tab') || 'installation';
+        if (document.getElementById('content-' + activeTab)) {
+            switchTab(activeTab);
+        }
+    });
+</script>
+{% endblock %}
