@@ -77,6 +77,9 @@ class Website(db.Model):
     # Structure: { "loop": { "enabled": bool, "showTime": int, "hideTime": int } }
     settings = db.Column(db.JSON, default={})
     
+    # Pricing / Limits
+    max_widgets = db.Column(db.Integer, default=3)
+    
     # Relationships
     members = db.relationship('WebsiteMember', backref='website', lazy=True)
     widgets = db.relationship('Widget', backref='website', lazy=True)

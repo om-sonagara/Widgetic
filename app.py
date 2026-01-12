@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Website, WebsiteMember, Widget, WidgetType, WidgetPosition, WidgetStatus
+from models import db, User, Website, WebsiteMember, Widget, WidgetType, WidgetPosition, WidgetStatus, GlobalRole
 import uuid
 import json
 from flask_migrate import Migrate
@@ -46,7 +46,23 @@ def register():
         
         
         login_user(user)
-        return redirect(url_for('dashboard'))
+
+        # Auto-create Website for new User
+        # Name it "[User Name]'s Website"
+        company_site = Website(
+            name=f"{name}'s Website",
+            domain="" # Pending setup
+        )
+        db.session.add(company_site)
+        db.session.commit()
+        
+        # Add User as Admin
+        member = WebsiteMember(user_id=user.id, website_id=company_site.id, role="ADMIN")
+        db.session.add(member)
+        db.session.commit()
+
+        # Redirect to the new website
+        return redirect(url_for('website_detail', website_id=company_site.id))
         
     return render_template('auth/register.html')
 
@@ -60,7 +76,18 @@ def login():
         
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            login_user(user)
+            
+            # Redirect Logic
+            if user.global_role == GlobalRole.SUPERADMIN:
+                return redirect(url_for('dashboard'))
+            else:
+                # Regular user: redirect to first website if exists
+                member_ship = WebsiteMember.query.filter_by(user_id=user.id).first()
+                if member_ship:
+                    return redirect(url_for('website_detail', website_id=member_ship.website_id))
+                else:
+                    return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password')
             
@@ -82,16 +109,25 @@ def index():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # List all websites the user is a member of
-    memberships = WebsiteMember.query.filter_by(user_id=current_user.id).all()
-    website_ids = [m.website_id for m in memberships]
-    websites = Website.query.filter(Website.id.in_(website_ids)).all()
+    # Superadmin sees all
+    if current_user.global_role == GlobalRole.SUPERADMIN:
+        websites = Website.query.all()
+    else:
+        # List all websites the user is a member of
+        memberships = WebsiteMember.query.filter_by(user_id=current_user.id).all()
+        website_ids = [m.website_id for m in memberships]
+        websites = Website.query.filter(Website.id.in_(website_ids)).all()
     
     return render_template('dashboard/websites.html', websites=websites)
 
 @app.route('/website/new', methods=['GET', 'POST'])
 @login_required
-def create_website():
+def create_new_website():
+    # Only Superadmin can create websites
+    if current_user.global_role != GlobalRole.SUPERADMIN:
+        flash("Only Superadmins can create new websites.", "error")
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
         name = request.form.get('name')
         domain = request.form.get('domain')
@@ -114,7 +150,7 @@ def website_detail(website_id):
     website = Website.query.get_or_404(website_id)
     # Check membership
     member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
-    if not member:
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
         
@@ -152,13 +188,55 @@ def website_detail(website_id):
                            filter_type=filter_type,
                            filter_status=filter_status)
 
+@app.route('/website/<website_id>/pricing')
+@login_required
+def website_pricing(website_id):
+    website = Website.query.get_or_404(website_id)
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+        
+    return render_template('dashboard/pricing.html', website=website)
+
+@app.route('/website/<website_id>/upgrade', methods=['POST'])
+@login_required
+def upgrade_website(website_id):
+    website = Website.query.get_or_404(website_id)
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
+        flash("Unauthorized", "error")
+        return redirect(url_for('dashboard'))
+        
+    plan_price = request.form.get('price')
+    
+    # Ensure current max_widgets is int
+    if website.max_widgets is None:
+        website.max_widgets = 3
+
+    if plan_price == '399':
+        website.max_widgets += 1
+        flash("Successfully added 1 Toast!", "success")
+    elif plan_price == '699':
+        website.max_widgets += 2
+        flash("Successfully added 2 Toasts!", "success")
+    elif plan_price == '999':
+        website.max_widgets += 3
+        flash("Successfully added 3 Toasts!", "success")
+    else:
+        flash("Invalid plan selected", "error")
+        
+    db.session.commit()
+    return redirect(url_for('website_detail', website_id=website.id))
+
+
 @app.route('/website/<website_id>/settings', methods=['POST'])
 @login_required
 def website_settings(website_id):
     website = Website.query.get_or_404(website_id)
     # Check membership
     member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
-    if not member:
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
 
@@ -199,9 +277,17 @@ def website_settings(website_id):
 def create_widget(website_id):
     website = Website.query.get_or_404(website_id)
     member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
-    if not member:
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
+
+    # Check Limit
+    current_count = Widget.query.filter_by(website_id=website.id).count()
+    limit = website.max_widgets if website.max_widgets is not None else 3
+    
+    if current_count >= limit:
+        flash(f"Limit reached ({limit}). Upgrade to create more!", "warning")
+        return redirect(url_for('website_pricing', website_id=website.id))
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -239,7 +325,10 @@ def create_widget(website_id):
 @login_required
 def edit_widget(widget_id):
     widget = Widget.query.get_or_404(widget_id)
-    if widget.created_by_id != current_user.id:
+    if widget.created_by_id != current_user.id and current_user.global_role != GlobalRole.SUPERADMIN:
+        # Note: Usually checking website membership is better, but this checks creator. 
+        # For legacy, we keep creator check but allow superadmin bypass.
+        # Ideally we should also check if current user is admin of the website, but let's stick to existing logic + bypass
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
 
@@ -284,7 +373,7 @@ def edit_widget(widget_id):
 def delete_widget(widget_id):
     widget = Widget.query.get_or_404(widget_id)
     website_id = widget.website_id
-    if widget.created_by_id != current_user.id:
+    if widget.created_by_id != current_user.id and current_user.global_role != GlobalRole.SUPERADMIN:
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
         
@@ -297,7 +386,7 @@ def delete_widget(widget_id):
 @login_required
 def toggle_widget_status(widget_id):
     widget = Widget.query.get_or_404(widget_id)
-    if widget.created_by_id != current_user.id:
+    if widget.created_by_id != current_user.id and current_user.global_role != GlobalRole.SUPERADMIN:
         flash("Unauthorized")
         return redirect(url_for('dashboard'))
     

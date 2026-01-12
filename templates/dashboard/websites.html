@@ -7,13 +7,16 @@
              <h1 class="text-4xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
              <p class="text-slate-500 mt-1 font-medium">Overview of your websites and widgets.</p>
         </div>
-        <a href="{{ url_for('create_website') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 hover:scale-105 active:scale-95">
+        {% if current_user.global_role.value == 'SUPERADMIN' %}
+        <a href="{{ url_for('create_new_website') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 hover:scale-105 active:scale-95">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
             Add Website
         </a>
+        {% endif %}
     </div>
 
     <!-- Stats Overview -->
+    {% if current_user.global_role.value == 'SUPERADMIN' %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
             <div class="flex items-center gap-4">
@@ -27,6 +30,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Website Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -52,6 +56,7 @@
                     <span class="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg border border-blue-100">{{ website.widgets|length }}</span>
                     <span class="text-slate-500 font-medium">Widgets Active</span>
                 </div>
+                <!-- Limit Badge Removed -->
                 <span class="text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform duration-500">Manage &rarr;</span>
             </div>
         </a>
@@ -62,7 +67,7 @@
             </div>
             <h3 class="text-2xl font-bold text-slate-800 tracking-tight">Expand your Ecosystem</h3>
             <p class="text-slate-500 mt-2 mb-10 max-w-sm mx-auto font-medium">Add your first website to start creating widgets and tracking real-time analytics.</p>
-            <a href="{{ url_for('create_website') }}" class="inline-block bg-blue-600 text-white px-10 py-4 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95">Create Your First Website</a>
+            <a href="{{ url_for('create_new_website') }}" class="inline-block bg-blue-600 text-white px-10 py-4 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95">Create Your First Website</a>
         </div>
         {% endfor %}
     </div>
