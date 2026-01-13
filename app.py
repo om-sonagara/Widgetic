@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Website, WebsiteMember, GlobalRole, UserStatus, Widget, WidgetType, WidgetStatus, WidgetPosition, GlobalRole
+from models import db, User, Website, WebsiteMember, GlobalRole, UserStatus, Widget, WidgetType, WidgetStatus, WidgetPosition, Analytics, GlobalRole
 import uuid
 import json
 from flask_migrate import Migrate
@@ -223,6 +223,50 @@ def website_analytics(website_id):
                             total_views=total_views,
                             total_clicks=total_clicks,
                             ctr=ctr)
+
+@app.route('/website/<website_id>/analytics/table')
+@login_required
+def website_analytics_table(website_id):
+    website = Website.query.get_or_404(website_id)
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+
+    # Fetch daily analytics for all widgets in this website
+    # Join with Widget to get the name, and aggregate duplicates
+    results = db.session.query(
+        Analytics.date, 
+        Widget, 
+        func.sum(Analytics.views).label('views'),
+        func.sum(Analytics.clicks).label('clicks'),
+        func.sum(Analytics.dismissals).label('dismissals')
+    ).join(Widget).filter(
+        Widget.website_id == website.id
+    ).group_by(
+        Analytics.date, Widget.id
+    ).order_by(
+        Analytics.date.desc()
+    ).all()
+    
+    # Structure for template: dict of {date: list of (stat_obj_like, widget)}
+    # We use a standard dictionary and sort keys in the template, or use a list of tuples
+    grouped_data = {}
+    for r in results:
+        date_key = r[0]
+        stat = {
+            'views': r[2] or 0,
+            'clicks': r[3] or 0,
+            'dismissals': r[4] or 0
+        }
+        if date_key not in grouped_data:
+            grouped_data[date_key] = []
+        grouped_data[date_key].append((stat, r[1]))
+    
+    # Sort dates descending
+    sorted_dates = sorted(grouped_data.keys(), reverse=True)
+    
+    return render_template('dashboard/analytics_table.html', website=website, grouped_data=grouped_data, sorted_dates=sorted_dates)
 
 
 
@@ -477,6 +521,22 @@ def track_widget_event(widget_id):
         widget.clicks += 1
     elif event_type == 'dismiss':
         widget.dismissals += 1
+        
+    # 2. Update Daily Stats (Analytics)
+    today = datetime.utcnow().date()
+    # Check if a record exists for today
+    daily_stat = Analytics.query.filter_by(widget_id=widget.id, date=today).first()
+    
+    if not daily_stat:
+        daily_stat = Analytics(widget_id=widget.id, date=today, views=0, clicks=0, dismissals=0)
+        db.session.add(daily_stat)
+    
+    if event_type == 'view':
+        daily_stat.views += 1
+    elif event_type == 'click':
+        daily_stat.clicks += 1
+    elif event_type == 'dismiss':
+        daily_stat.dismissals += 1
         
     db.session.commit()
     return jsonify({"success": True})

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-4 flex justify-between items-end">
+        <div>
+            <div class="flex items-center gap-2 text-sm text-slate-500 mb-2 font-bold uppercase tracking-widest px-1">
+                <a href="{{ url_for('website_detail', website_id=website.id) }}" class="hover:text-blue-600 transition-colors">{{ website.name }}</a>
+                <span>/</span>
+                <a href="{{ url_for('website_analytics', website_id=website.id) }}" class="hover:text-blue-600 transition-colors">Analytics</a>
+                <span>/</span>
+                <span>Daily Breakdown</span>
+            </div>
+            <h1 class="text-5xl font-black text-slate-800 tracking-tighter">Daily Records</h1>
+        </div>
+        <div>
+             <a href="{{ url_for('website_analytics', website_id=website.id) }}" class="bg-white border border-gray-200 text-slate-600 px-6 py-3 rounded-2xl hover:bg-gray-50 hover:text-slate-800 transition-all font-bold shadow-sm flex items-center gap-2 text-sm uppercase tracking-wider">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+                Back to Overview
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        
+        {% if sorted_dates %}
+        <div class="space-y-12 p-8">
+            {% for date in sorted_dates %}
+            <div>
+                <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                    <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-sm uppercase tracking-wide">{{ date.strftime('%A, %B %d, %Y') }}</span>
+                </h3>
+                <div class="overflow-x-auto rounded-3xl border border-gray-200 shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100">
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-1/3">Toast Identity</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Impressions</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Interactions</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Dismissals</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">CTR</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            {% for stat, widget in grouped_data[date] %}
+                            <tr class="group hover:bg-blue-50/50 transition-colors">
+                                <td class="p-4 border-l-4 border-transparent group-hover:border-blue-500">
+                                    <div class="font-bold text-slate-800">{{ widget.name }}</div>
+                                    <div class="text-xs text-slate-400 font-mono mt-1">{{ widget.type.name.replace('_', ' ')|title }}</div>
+                                </td>
+                                <td class="p-4 text-right font-mono text-slate-600 font-bold">{{ stat.views }}</td>
+                                <td class="p-4 text-right font-mono text-slate-600 font-bold">{{ stat.clicks }}</td>
+                                <td class="p-4 text-right font-mono text-slate-600 font-bold">{{ stat.dismissals }}</td>
+                                <td class="p-4 text-right font-bold text-blue-600">
+                                    {% if stat.views > 0 %}
+                                        {{ "%.1f"|format(stat.clicks / stat.views * 100) }}%
+                                    {% else %}
+                                        0.0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <div class="w-16 h-16 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">No Daily Records Found</h3>
+            <p class="text-slate-500 max-w-sm mx-auto">Analytics data will appear here once your toasts start receiving traffic.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
