@@ -96,16 +96,32 @@
         /* --- NOTIFICATION (Default) --- */
         .widgetic-container.type-notification {
             width: 320px;
-            transform: translateY(20px);
+            /* Default: just opacity fade if not overridden */
         }
-        .widgetic-container.type-notification.visible { transform: translateY(0); }
-        .pos-bottom-right { bottom: 20px; right: 20px; }
-        .pos-bottom-left { bottom: 20px; left: 20px; }
-        /* Top positions slide down */
-        .pos-top-right { top: 20px; right: 20px; transform: translateY(-20px); }
-        .pos-top-left { top: 20px; left: 20px; transform: translateY(-20px); }
-        .widgetic-container.visible.pos-top-right, 
-        .widgetic-container.visible.pos-top-left { transform: translateY(0); }
+        
+        /* LEFT SIDE: Slide in from Left (-50px) */
+        .pos-top-left, .pos-bottom-left { 
+            left: 20px; 
+            transform: translateX(-50px); 
+        }
+        .pos-top-left { top: 20px; }
+        .pos-bottom-left { bottom: 20px; }
+
+        /* RIGHT SIDE: Slide in from Right (50px) */
+        .pos-top-right, .pos-bottom-right { 
+            right: 20px; 
+            transform: translateX(50px); 
+        }
+        .pos-top-right { top: 20px; }
+        .pos-bottom-right { bottom: 20px; }
+
+        .widgetic-container.visible.pos-bottom-right,
+        .widgetic-container.visible.pos-bottom-left,
+        .widgetic-container.visible.pos-top-right,
+        .widgetic-container.visible.pos-top-left { 
+            transform: translateX(0); 
+            opacity: 1;
+        }
 
 
         /* --- POPUP MODAL --- */
