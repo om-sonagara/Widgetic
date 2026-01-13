@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-4 flex justify-between items-end">
+        <div>
+            <div class="flex items-center gap-2 text-sm text-slate-500 mb-2 font-bold uppercase tracking-widest px-1">
+                <a href="{{ url_for('website_detail', website_id=website.id) }}" class="hover:text-blue-600 transition-colors">{{ website.name }}</a>
+                <span>/</span>
+                <span>Analytics</span>
+            </div>
+            <h1 class="text-5xl font-black text-slate-800 tracking-tighter">Performance Insights</h1>
+        </div>
+        <!-- Daily Logs Button Removed -->
+    </div>
+
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-8 min-h-[600px]">
+        
+        <h2 class="text-2xl font-bold text-slate-800 mb-8">All Time Metrics</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Impressions</p>
+                <p class="text-4xl font-black text-blue-600">{{ widgets|sum(attribute='views') }}</p>
+            </div>
+            <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Clicks</p>
+                <p class="text-4xl font-black text-blue-600">{{ widgets|sum(attribute='clicks') }}</p>
+            </div>
+            <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Dismissals</p>
+                <p class="text-4xl font-black text-blue-600">{{ widgets|sum(attribute='dismissals') }}</p>
+            </div>
+            <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Conversion Rate</p>
+                <p class="text-4xl font-black text-blue-600">
+                    {% if total_views > 0 %}
+                        {{ "%.2f"|format(total_clicks / total_views * 100) }}%
+                    {% else %}
+                        0.00%
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Metrics Graph -->
+        <div class="mb-12 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Engagement Overview</h3>
+            <div class="h-80 w-full">
+                <canvas id="metricsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart.js CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            // Data from Jinja
+            const views = {{ widgets|sum(attribute='views') }};
+            const clicks = {{ widgets|sum(attribute='clicks') }};
+            const dismissals = {{ widgets|sum(attribute='dismissals') }};
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Impressions', 'Clicks', 'Dismissals'],
+                    datasets: [{
+                        label: 'Total Count',
+                        data: [views, clicks, dismissals],
+                        backgroundColor: [
+                            'rgba(37, 99, 235, 0.2)', // Blue-600 with opacity
+                            'rgba(22, 163, 74, 0.2)', // Green-600
+                            'rgba(220, 38, 38, 0.2)'  // Red-600
+                        ],
+                        borderColor: [
+                            'rgb(37, 99, 235)',
+                            'rgb(22, 163, 74)',
+                            'rgb(220, 38, 38)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                borderDash: [5, 5]
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <!-- Daily Breakdown Section Removed -->
+
+    </div>
+</div>
+{% endblock %}

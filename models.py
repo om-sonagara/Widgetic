@@ -107,8 +107,10 @@ class Widget(db.Model):
     # Analytics
     views = db.Column(db.Integer, default=0)
     clicks = db.Column(db.Integer, default=0)
+    dismissals = db.Column(db.Integer, default=0)
     
     created_by_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+

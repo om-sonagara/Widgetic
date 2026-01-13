@@ -2,11 +2,13 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Website, WebsiteMember, Widget, WidgetType, WidgetPosition, WidgetStatus, GlobalRole
+from models import db, User, Website, WebsiteMember, GlobalRole, UserStatus, Widget, WidgetType, WidgetStatus, WidgetPosition, GlobalRole
 import uuid
 import json
 from flask_migrate import Migrate
 from flask_cors import CORS
+from datetime import datetime
+from sqlalchemy import func
 
 
 app = Flask(__name__)
@@ -112,13 +114,15 @@ def dashboard():
     # Superadmin sees all
     if current_user.global_role == GlobalRole.SUPERADMIN:
         websites = Website.query.all()
+        return render_template('dashboard/websites.html', websites=websites)
     else:
-        # List all websites the user is a member of
-        memberships = WebsiteMember.query.filter_by(user_id=current_user.id).all()
-        website_ids = [m.website_id for m in memberships]
-        websites = Website.query.filter(Website.id.in_(website_ids)).all()
-    
-    return render_template('dashboard/websites.html', websites=websites)
+        # Regular Users: Redirect to their first website
+        membership = WebsiteMember.query.filter_by(user_id=current_user.id).first()
+        if membership:
+            return redirect(url_for('website_detail', website_id=membership.website_id))
+        else:
+            # Fallback if no website exists (should be rare due to auto-create)
+            return render_template('dashboard/websites.html', websites=[])
 
 @app.route('/website/new', methods=['GET', 'POST'])
 @login_required
@@ -198,6 +202,29 @@ def website_pricing(website_id):
         return redirect(url_for('dashboard'))
         
     return render_template('dashboard/pricing.html', website=website)
+
+@app.route('/website/<website_id>/analytics')
+@login_required
+def website_analytics(website_id):
+    website = Website.query.get_or_404(website_id)
+    member = WebsiteMember.query.filter_by(user_id=current_user.id, website_id=website.id).first()
+    if not member and current_user.global_role != GlobalRole.SUPERADMIN:
+        flash("Unauthorized")
+        return redirect(url_for('dashboard'))
+
+    # Calculate stats
+    total_views = sum(w.views for w in website.widgets)
+    total_clicks = sum(w.clicks for w in website.widgets)
+    ctr = (total_clicks / total_views * 100) if total_views > 0 else 0
+    
+    return render_template('dashboard/analytics.html', 
+                            website=website, 
+                            widgets=website.widgets,
+                            total_views=total_views,
+                            total_clicks=total_clicks,
+                            ctr=ctr)
+
+
 
 @app.route('/website/<website_id>/upgrade', methods=['POST'])
 @login_required
@@ -443,10 +470,16 @@ def track_widget_event(widget_id):
     if not widget:
         return jsonify({"error": "Widget not found"}), 404
         
+    # 1. Update Total Stats
     if event_type == 'view':
         widget.views += 1
     elif event_type == 'click':
         widget.clicks += 1
+    elif event_type == 'dismiss':
+        widget.dismissals += 1
+        
+    db.session.commit()
+    return jsonify({"success": True})
         
     db.session.commit()
     return jsonify({"success": True})

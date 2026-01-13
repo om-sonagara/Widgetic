@@ -438,7 +438,7 @@
 
         container.innerHTML = generateCardHTML(widget);
 
-        setupCloseHandler();
+        setupCloseHandler(widget);
         setupClickTracking(widget);
     }
 
@@ -447,10 +447,7 @@
 
         container.innerHTML = generateCardHTML(widget);
 
-        setupCloseHandler(true); // Close overlay too
-        setupClickTracking(widget);
-
-        setupCloseHandler(true); // Close overlay too
+        setupCloseHandler(widget, true); // Close overlay too
         setupClickTracking(widget);
 
         overlay.onclick = () => {
@@ -482,7 +479,7 @@
             </div>
         `;
 
-        setupCloseHandler();
+        setupCloseHandler(widget);
         setupClickTracking(widget);
     }
 
@@ -495,7 +492,7 @@
         container.classList.add(isLeft ? "pos-left" : "pos-right");
 
         container.innerHTML = generateCardHTML(widget);
-        setupCloseHandler();
+        setupCloseHandler(widget);
         setupClickTracking(widget);
     }
 
@@ -539,11 +536,12 @@
     }
 
     /* --- Utilities --- */
-    function setupCloseHandler(closeOverlay = false) {
+    function setupCloseHandler(widget, closeOverlay = false) {
         const closeBtn = container.querySelector(".widgetic-close");
         if (closeBtn) {
             closeBtn.onclick = (e) => {
                 e.stopPropagation();
+                trackEvent(widget.id, "dismiss");
                 manualClose();
             };
         }

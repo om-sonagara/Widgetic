@@ -58,7 +58,7 @@
              <div id="content-analytics" class="tab-content hidden px-4">
                 <h2 class="text-2xl font-bold text-slate-800 mb-8">Performance Metrics</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                     <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
                         <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Impressions</p>
                         <p class="text-4xl font-black text-blue-600">{{ widget.views }}</p>
@@ -66,6 +66,10 @@
                     <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
                         <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Interactions</p>
                         <p class="text-4xl font-black text-blue-600">{{ widget.clicks }}</p>
+                    </div>
+                    <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Dismissals</p>
+                        <p class="text-4xl font-black text-blue-600">{{ widget.dismissals }}</p>
                     </div>
                     <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
                         <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Efficiency (CTR)</p>
@@ -79,12 +83,68 @@
                     </div>
                 </div>
                 
-                <div class="h-80 bg-gray-50 rounded-3xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-slate-500 group overflow-hidden relative">
-                    <div class="w-20 h-20 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                    </div>
-                    <span class="font-bold uppercase tracking-widest text-xs">Analytics Visualization Loading...</span>
+                <div class="h-80 w-full bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <canvas id="widgetGraph"></canvas>
                 </div>
+                
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const ctx = document.getElementById('widgetGraph').getContext('2d');
+                        
+                        // Data from Jinja
+                        const views = {{ widget.views }};
+                        const clicks = {{ widget.clicks }};
+                        const dismissals = {{ widget.dismissals }};
+                        
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Impressions', 'Clicks', 'Dismissals'],
+                                datasets: [{
+                                    label: 'Count',
+                                    data: [views, clicks, dismissals],
+                                    backgroundColor: [
+                                        'rgba(37, 99, 235, 0.2)', // Blue-600 with opacity
+                                        'rgba(22, 163, 74, 0.2)', // Green-600
+                                        'rgba(220, 38, 38, 0.2)'  // Red-600
+                                    ],
+                                    borderColor: [
+                                        'rgb(37, 99, 235)',
+                                        'rgb(22, 163, 74)',
+                                        'rgb(220, 38, 38)'
+                                    ],
+                                    borderWidth: 2,
+                                    borderRadius: 8,
+                                    borderSkipped: false
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            display: true,
+                                            borderDash: [5, 5]
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
             </div>
 
             <!-- Content & Appearance Form -->
